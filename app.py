@@ -2,6 +2,7 @@
 # Author: Satwik Shreshth
 # Model trained on Sentinel-1 SAR imagery over the Kosi river basin, Bihar, India
 
+import spaces
 import torch
 import torch.nn as nn
 import numpy as np
@@ -60,17 +61,19 @@ class UNet(nn.Module):
 
         return self.final_conv(x)
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# Model is loaded on CPU at startup. ZeroGPU allocates a GPU only for the
+# duration of functions decorated with @spaces.GPU, so the model is moved
+# to CUDA inside the predict function itself, not at module load time.
 model = UNet(in_channels=6, out_channels=1)
-state_dict = torch.load("best_model.pt", map_location=device)
+state_dict = torch.load("best_model.pt", map_location="cpu")
 state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
 model.load_state_dict(state_dict)
-model.to(device)
 model.eval()
 
 PATCH_SIZE = 256
 BAND_NAMES = ["VV_post", "VH_post", "VV_pre", "VH_pre", "log_ratio", "elevation"]
 
+@spaces.GPU
 def predict(tif_file):
     with rasterio.open(tif_file.name) as src:
         arr = src.read().astype(np.float32)
@@ -84,6 +87,9 @@ def predict(tif_file):
     pad_w = max(0, PATCH_SIZE - w)
     arr = np.pad(arr, ((0, 0), (0, pad_h), (0, pad_w)), mode="constant")
     arr = arr[:, :PATCH_SIZE, :PATCH_SIZE]
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
 
     tensor = torch.from_numpy(arr).unsqueeze(0).to(device)
 
