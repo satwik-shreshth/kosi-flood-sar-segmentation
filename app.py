@@ -69,9 +69,16 @@ model.eval()
 
 PATCH_SIZE = 256
 
+def _resolve_path(tif_file):
+    """gr.File may hand back a plain path string (Gradio 5.x) or an object
+    with a .name attribute (older Gradio). Handle both."""
+    return tif_file.name if hasattr(tif_file, "name") else tif_file
+
 @spaces.GPU(duration=60)
 def predict(tif_file):
-    with rasterio.open(tif_file.name) as src:
+    path = _resolve_path(tif_file)
+
+    with rasterio.open(path) as src:
         arr = src.read().astype(np.float32)
         arr = np.nan_to_num(arr, nan=0.0)
 
@@ -94,7 +101,8 @@ def predict(tif_file):
         pred = (torch.sigmoid(output) > 0.5).cpu().numpy()[0, 0]
 
     flood_pct = 100 * pred.sum() / pred.size
-    return (pred * 255).astype(np.uint8), f"Predicted flood coverage: {flood_pct:.2f}%"
+    mask = (pred * 255).astype(np.uint8)
+    return mask, f"Predicted flood coverage: {flood_pct:.2f}%"
 
 demo = gr.Interface(
     fn=predict,
