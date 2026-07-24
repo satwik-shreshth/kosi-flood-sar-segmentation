@@ -61,9 +61,6 @@ class UNet(nn.Module):
 
         return self.final_conv(x)
 
-# Model is loaded on CPU at startup. ZeroGPU allocates a GPU only for the
-# duration of functions decorated with @spaces.GPU, so the model is moved
-# to CUDA inside the predict function itself, not at module load time.
 model = UNet(in_channels=6, out_channels=1)
 state_dict = torch.load("best_model.pt", map_location="cpu")
 state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
@@ -71,16 +68,15 @@ model.load_state_dict(state_dict)
 model.eval()
 
 PATCH_SIZE = 256
-BAND_NAMES = ["VV_post", "VH_post", "VV_pre", "VH_pre", "log_ratio", "elevation"]
 
-@spaces.GPU
+@spaces.GPU(duration=60)
 def predict(tif_file):
     with rasterio.open(tif_file.name) as src:
         arr = src.read().astype(np.float32)
         arr = np.nan_to_num(arr, nan=0.0)
 
     if arr.shape[0] != 6:
-        return None, f"Expected 6 bands (VV_post, VH_post, VV_pre, VH_pre, log_ratio, elevation), got {arr.shape[0]}"
+        return None, f"Expected 6 bands, got {arr.shape[0]}"
 
     h, w = arr.shape[1], arr.shape[2]
     pad_h = max(0, PATCH_SIZE - h)
@@ -98,27 +94,15 @@ def predict(tif_file):
         pred = (torch.sigmoid(output) > 0.5).cpu().numpy()[0, 0]
 
     flood_pct = 100 * pred.sum() / pred.size
-    return (pred * 255).astype(np.uint8), f"Predicted flood coverage: {flood_pct:.2f}% of patch"
+    return (pred * 255).astype(np.uint8), f"Predicted flood coverage: {flood_pct:.2f}%"
 
 demo = gr.Interface(
     fn=predict,
-    inputs=gr.File(label="Upload 6-band GeoTIFF (VV_post, VH_post, VV_pre, VH_pre, log_ratio, elevation)"),
+    inputs=gr.File(label="Upload 6-band GeoTIFF"),
     outputs=[gr.Image(label="Predicted Flood Mask"), gr.Textbox(label="Summary")],
     title="Kosi River Flood Segmentation (SAR U-Net)",
-    description=(
-        "U-Net trained on Sentinel-1 SAR imagery over the Kosi river basin, Bihar, India, "
-        "to segment flood extent from pre/post-flood radar backscatter. "
-        "Developed by Satwik Shreshth. Upload a 6-band GeoTIFF patch (256x256 or smaller) "
-        "to get a flood extent prediction."
-    ),
-    article=(
-        "**Model:** U-Net, 6-channel input (VV_post, VH_post, VV_pre, VH_pre, log_ratio, elevation).<br>"
-        "**Data:** Sentinel-1 GRD (IW, VV+VH, descending orbit), Aug-Sep 2024, Kosi basin, Bihar.<br>"
-        "**Performance:** Dice 0.9593, IoU 0.9218 on held-out test data.<br>"
-        "**Author:** Satwik Shreshth"
-    ),
+    description="U-Net trained on Sentinel-1 SAR imagery over the Kosi river basin, Bihar, India. Developed by Satwik Shreshth.",
 )
 
-if __name__ == "__main__":
-    demo.queue()
-    demo.launch(ssr_mode=False)
+demo.queue()
+demo.launch()
