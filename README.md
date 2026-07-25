@@ -39,10 +39,6 @@ GitHub Pages — with no server of its own.
 The processed SAR patch archive is published on Kaggle:
 **[Bihar Kosi Flood SAR Dataset](https://www.kaggle.com/datasets/satwikshreshth01/bihar-kosi-flood-sar-datase)**
 
-> ⚠️ Worth double-checking that URL before publishing — it currently ends in `...sar-datase`
-> rather than `...sar-dataset`. If that's really the slug Kaggle assigned, it's fine as-is;
-> if it's a typo, best to fix it now before it's linked from the repo.
-
 To regenerate the raw six-band stack and label from scratch (rather than using the Kaggle
 archive directly), run `Data_Export.js` in the [Google Earth Engine code editor](https://code.earthengine.google.com/).
 It pulls Sentinel-1 GRD (COPERNICUS/S1_GRD), the JRC Global Surface Water dataset, and SRTM
