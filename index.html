@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kosi Flood Watch — SAR Flood Segmentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:            #0E2438;
+    --bg-panel:      #12314C;
+    --bg-panel-2:    #163A59;
+    --grid-line:     rgba(191,225,240,0.10);
+    --grid-line-strong: rgba(191,225,240,0.22);
+    --ink:           #EAF4F8;
+    --muted:         #7FA0B6;
+    --muted-dim:     #5C7C90;
+    --cyan:          #63D6EA;
+    --cyan-dim:      #3E7E90;
+    --alert:         #CE5B44;
+    --alert-dim:     #7A3A2E;
+    --serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 44px 44px;
+    color:var(--ink);
+    font-family:var(--serif);
+    font-size:17px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{color:inherit;}
+  ::selection{background:var(--cyan); color:var(--bg);}
+
+  .wrap{max-width:1120px; margin:0 auto; padding:0 32px;}
+
+  /* ---------- Nav ---------- */
+  header.nav{
+    position:sticky; top:0; z-index:50;
+    background:rgba(14,36,56,0.86);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--grid-line-strong);
+  }
+  header.nav .wrap{
+    display:flex; align-items:center; justify-content:space-between;
+    height:64px;
+  }
+  .brand{
+    font-family:var(--mono); font-size:13px; letter-spacing:0.14em;
+    color:var(--cyan); text-transform:uppercase; text-decoration:none;
+    display:flex; align-items:center; gap:10px;
+  }
+  .brand .dot{
+    width:8px; height:8px; border-radius:50%; background:var(--alert);
+    box-shadow:0 0 0 3px rgba(206,91,68,0.25);
+    animation:pulse 2.6s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{ box-shadow:0 0 0 3px rgba(206,91,68,0.25);}
+    50%{ box-shadow:0 0 0 6px rgba(206,91,68,0.08);}
+  }
+  nav.links{display:flex; gap:28px; font-family:var(--mono); font-size:12.5px; letter-spacing:0.06em; text-transform:uppercase;}
+  nav.links a{color:var(--muted); text-decoration:none; border-bottom:1px solid transparent; padding-bottom:2px; transition:color .15s, border-color .15s;}
+  nav.links a:hover{color:var(--cyan); border-color:var(--cyan);}
+  .nav-cta{
+    font-family:var(--mono); font-size:12.5px; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--bg); background:var(--cyan); padding:9px 16px; border-radius:2px;
+    text-decoration:none; white-space:nowrap;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{padding:88px 0 64px;}
+  .hero-grid{display:grid; grid-template-columns:1.05fr 0.95fr; gap:56px; align-items:center;}
+  .eyebrow{
+    font-family:var(--mono); font-size:12.5px; letter-spacing:0.16em; text-transform:uppercase;
+    color:var(--muted); margin:0 0 18px; display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{content:""; width:22px; height:1px; background:var(--cyan-dim);}
+  h1{
+    font-family:var(--display); font-weight:800; text-transform:uppercase;
+    font-size:clamp(40px,5.4vw,68px); line-height:0.98; letter-spacing:0.005em;
+    margin:0 0 24px; color:var(--ink);
+  }
+  h1 em{font-style:normal; color:var(--cyan);}
+  .lede{
+    font-size:18px; color:var(--muted); max-width:52ch; margin:0 0 34px; line-height:1.7;
+  }
+  .lede b{color:var(--ink); font-weight:600;}
+  .cta-row{display:flex; align-items:center; gap:22px; flex-wrap:wrap;}
+  .btn-primary{
+    font-family:var(--mono); font-size:13.5px; letter-spacing:0.05em; text-transform:uppercase;
+    background:var(--alert); color:#0E2438; padding:15px 26px; text-decoration:none;
+    border-radius:2px; font-weight:600; display:inline-flex; align-items:center; gap:10px;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .btn-primary:hover{background:#DE6C52; transform:translateY(-1px);}
+  .btn-primary svg{width:14px; height:14px;}
+  .btn-secondary{
+    font-family:var(--mono); font-size:13px; letter-spacing:0.05em; text-transform:uppercase;
+    color:var(--muted); text-decoration:none; border-bottom:1px solid var(--muted-dim); padding-bottom:3px;
+    transition:color .15s, border-color .15s;
+  }
+  .btn-secondary:hover{color:var(--cyan); border-color:var(--cyan);}
+
+  .stat-strip{
+    display:flex; gap:0; margin-top:52px; border-top:1px solid var(--grid-line-strong);
+    padding-top:20px; max-width:560px;
+  }
+  .stat{flex:1; padding-right:18px;}
+  .stat .n{font-family:var(--mono); font-size:24px; color:var(--cyan); font-weight:600;}
+  .stat .l{font-family:var(--mono); font-size:11px; color:var(--muted-dim); text-transform:uppercase; letter-spacing:0.07em; margin-top:4px;}
+
+  /* ---------- Signature map graphic ---------- */
+  .chart-panel{
+    background:var(--bg-panel); border:1px solid var(--grid-line-strong); border-radius:3px;
+    padding:20px 20px 16px; position:relative; overflow:hidden;
+  }
+  .chart-head{
+    display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px;
+    font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted-dim);
+  }
+  .chart-head .live{color:var(--alert);}
+  .map-frame{position:relative; border:1px solid var(--grid-line-strong); background:var(--bg);}
+  .map-frame svg{display:block; width:100%; height:auto;}
+  .scanline{
+    position:absolute; left:0; right:0; height:38%;
+    background:linear-gradient(180deg, rgba(99,214,234,0) 0%, rgba(99,214,234,0.16) 48%, rgba(99,214,234,0) 100%);
+    animation:sweep 5.5s linear infinite;
+    pointer-events:none;
+  }
+  @keyframes sweep{
+    0%{ top:-38%; }
+    100%{ top:100%; }
+  }
+  .map-caption{
+    display:flex; justify-content:space-between; margin-top:12px;
+    font-family:var(--mono); font-size:11px; color:var(--muted-dim);
+  }
+
+  /* ---------- Section shell ---------- */
+  section{padding:88px 0;}
+  .section-head{max-width:640px; margin-bottom:52px;}
+  .section-num{font-family:var(--mono); font-size:12px; color:var(--cyan-dim); letter-spacing:0.1em;}
+  h2{
+    font-family:var(--display); font-weight:800; text-transform:uppercase;
+    font-size:clamp(28px,3.4vw,40px); line-height:1.02; margin:10px 0 16px; color:var(--ink);
+  }
+  .section-sub{color:var(--muted); font-size:16.5px; max-width:58ch;}
+  .divider{border:none; border-top:1px solid var(--grid-line-strong); margin:0;}
+
+  /* ---------- Pipeline / legend ---------- */
+  .legend{border-top:1px solid var(--grid-line-strong);}
+  .legend-row{
+    display:grid; grid-template-columns:64px 200px 1fr 140px; gap:24px; align-items:center;
+    padding:22px 0; border-bottom:1px solid var(--grid-line);
+  }
+  .legend-row .idx{font-family:var(--mono); font-size:13px; color:var(--muted-dim);}
+  .legend-row .band{
+    font-family:var(--mono); font-size:14px; color:var(--cyan); background:rgba(99,214,234,0.08);
+    padding:5px 10px; border-radius:2px; width:fit-content; border:1px solid rgba(99,214,234,0.22);
+  }
+  .legend-row .desc{color:var(--muted); font-size:15px;}
+  .legend-row .desc b{color:var(--ink); font-weight:600;}
+  .legend-row .tag{font-family:var(--mono); font-size:11px; color:var(--muted-dim); text-transform:uppercase; text-align:right; letter-spacing:0.06em;}
+  .legend-row.model .band{color:var(--alert); background:rgba(206,91,68,0.08); border-color:rgba(206,91,68,0.28);}
+
+  @media (max-width:720px){
+    .legend-row{grid-template-columns:40px 1fr; grid-template-areas:"idx band" "desc desc" "tag tag"; row-gap:6px;}
+    .legend-row .idx{grid-area:idx;}
+    .legend-row .band{grid-area:band;}
+    .legend-row .desc{grid-area:desc;}
+    .legend-row .tag{grid-area:tag; text-align:left;}
+  }
+
+  /* ---------- Performance plate ---------- */
+  .plate{
+    background:var(--bg-panel); border:1px solid var(--grid-line-strong); border-radius:3px;
+    padding:36px; display:grid; grid-template-columns:repeat(4,1fr); gap:0;
+  }
+  .plate .metric{padding:0 24px; border-right:1px solid var(--grid-line-strong);}
+  .plate .metric:last-child{border-right:none;}
+  .plate .metric .v{font-family:var(--mono); font-size:36px; color:var(--cyan); font-weight:600; line-height:1;}
+  .plate .metric .k{font-family:var(--mono); font-size:11.5px; color:var(--muted-dim); text-transform:uppercase; letter-spacing:0.07em; margin-top:10px;}
+  .plate-compare{
+    margin-top:18px; display:flex; align-items:center; gap:14px;
+    font-family:var(--mono); font-size:13px; color:var(--muted);
+  }
+  .plate-compare .bar-track{flex:1; height:8px; background:var(--bg); border:1px solid var(--grid-line-strong); position:relative; border-radius:2px; overflow:hidden;}
+  .plate-compare .bar-fill{position:absolute; top:0; left:0; bottom:0; background:var(--alert-dim);}
+  .plate-compare .bar-fill.unet{background:var(--cyan);}
+
+  @media (max-width:720px){
+    .plate{grid-template-columns:1fr 1fr; row-gap:26px;}
+    .plate .metric{border-right:none; border-bottom:1px solid var(--grid-line-strong); padding-bottom:20px;}
+  }
+
+  /* ---------- How to use ---------- */
+  .howto{display:grid; grid-template-columns:1fr 1fr; gap:64px;}
+  .howto ol{list-style:none; margin:0; padding:0; counter-reset:step;}
+  .howto li{
+    counter-increment:step; padding:20px 0 20px 44px; position:relative;
+    border-bottom:1px solid var(--grid-line); font-size:15.5px; color:var(--muted);
+  }
+  .howto li:last-child{border-bottom:none;}
+  .howto li::before{
+    content:counter(step,decimal-leading-zero);
+    position:absolute; left:0; top:20px; font-family:var(--mono); font-size:13px; color:var(--cyan-dim);
+  }
+  .howto li b{color:var(--ink); font-weight:600;}
+  .howto-note{
+    font-family:var(--mono); font-size:12.5px; color:var(--muted-dim); line-height:1.8;
+    border-left:2px solid var(--alert-dim); padding-left:18px;
+  }
+
+  /* ---------- Disclaimer ---------- */
+  .disclaimer{
+    background:var(--bg-panel); border:1px solid var(--grid-line-strong); border-left:3px solid var(--alert);
+    padding:24px 28px; border-radius:0 3px 3px 0; font-size:15px; color:var(--muted);
+  }
+  .disclaimer b{color:var(--ink);}
+
+  /* ---------- Live demo widget ---------- */
+  .demo-panel{
+    background:var(--bg-panel); border:1px solid var(--grid-line-strong); border-radius:3px; padding:26px;
+  }
+  .drop-zone{
+    border:1.5px dashed var(--grid-line-strong); border-radius:2px; padding:34px 20px; text-align:center;
+    cursor:pointer; transition:border-color .15s, background .15s;
+  }
+  .drop-zone:hover, .drop-zone.drag{border-color:var(--cyan); background:rgba(99,214,234,0.04);}
+  .drop-zone .dz-icon{color:var(--cyan-dim); margin-bottom:10px;}
+  .drop-zone .dz-main{font-family:var(--mono); font-size:13.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em;}
+  .drop-zone .dz-sub{font-family:var(--mono); font-size:11.5px; color:var(--muted-dim); margin-top:8px;}
+  #file-name{color:var(--cyan);}
+  .run-row{display:flex; align-items:center; gap:16px; margin-top:18px;}
+  .btn-run{
+    font-family:var(--mono); font-size:13px; letter-spacing:0.05em; text-transform:uppercase;
+    background:var(--cyan); color:var(--bg); border:none; padding:13px 22px; border-radius:2px;
+    font-weight:600; cursor:pointer; transition:background .15s, transform .15s;
+  }
+  .btn-run:hover:not(:disabled){background:#8AE2F2; transform:translateY(-1px);}
+  .btn-run:disabled{background:var(--muted-dim); color:var(--bg-panel); cursor:not-allowed;}
+  .demo-status{font-family:var(--mono); font-size:12.5px; color:var(--muted-dim);}
+  .demo-status.busy{color:var(--cyan);}
+  .demo-status.busy::before{content:"⟳ "; display:inline-block; animation:spin 1s linear infinite;}
+  .demo-status.ok{color:#7FD68A;}
+  .demo-status.err{color:var(--alert);}
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .result-panel{
+    margin-top:22px; padding-top:22px; border-top:1px solid var(--grid-line-strong);
+    display:none; grid-template-columns:1fr 1fr; gap:22px; align-items:start;
+  }
+  .result-panel.show{display:grid;}
+  .result-panel .frame{border:1px solid var(--grid-line-strong); background:var(--bg); padding:8px;}
+  .result-panel .frame img{display:block; width:100%; height:auto;}
+  .result-panel .frame .cap{font-family:var(--mono); font-size:10.5px; color:var(--muted-dim); text-transform:uppercase; padding:6px 2px 0;}
+  .result-summary{font-family:var(--mono); font-size:14px; color:var(--ink); line-height:1.8;}
+  .result-summary .label{color:var(--muted-dim); font-size:11px; text-transform:uppercase; letter-spacing:0.06em; display:block; margin-bottom:8px;}
+  .btn-download{
+    display:none; align-items:center; gap:8px; margin-top:16px;
+    font-family:var(--mono); font-size:12px; letter-spacing:0.05em; text-transform:uppercase;
+    color:var(--cyan); text-decoration:none; border:1px solid var(--cyan-dim); padding:9px 14px;
+    border-radius:2px; width:fit-content; transition:background .15s, border-color .15s;
+  }
+  .btn-download:hover{background:rgba(99,214,234,0.08); border-color:var(--cyan);}
+  .btn-download svg{width:13px; height:13px;}
+
+  @media (max-width:720px){
+    .result-panel{grid-template-columns:1fr;}
+  }
+
+  /* ---------- Footer ---------- */
+  footer{border-top:1px solid var(--grid-line-strong); padding:48px 0 56px;}
+  .foot-grid{display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:24px;}
+  .foot-left{font-family:var(--mono); font-size:12.5px; color:var(--muted-dim); line-height:1.9;}
+  .foot-left a{color:var(--muted); text-decoration:none; border-bottom:1px solid var(--muted-dim);}
+  .foot-left a:hover{color:var(--cyan); border-color:var(--cyan);}
+  .foot-right{font-family:var(--mono); font-size:11.5px; color:var(--muted-dim); text-align:right;}
+
+  .reveal{opacity:0; transform:translateY(14px); transition:opacity .6s ease, transform .6s ease;}
+  .reveal.in{opacity:1; transform:translateY(0);}
+
+  @media (max-width:900px){
+    .hero-grid{grid-template-columns:1fr;}
+    .howto{grid-template-columns:1fr;}
+  }
+  @media (max-width:640px){
+    nav.links{display:none;}
+    .wrap{padding:0 20px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .scanline, .brand .dot{animation:none;}
+    html{scroll-behavior:auto;}
+    .reveal{transition:none; opacity:1; transform:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><span class="dot"></span>Kosi Flood Watch</a>
+    <nav class="links">
+      <a href="#pipeline">Pipeline</a>
+      <a href="#performance">Performance</a>
+      <a href="#demo">Try it</a>
+      <a href="./Shreshth_Kosi_SAR_UNet_Flood_Mapping.pdf" target="_blank" rel="noopener">Paper</a>
+    </nav>
+    <a class="nav-cta" href="#demo">Run inference</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow">Sentinel&#8209;1 SAR &middot; Six&#8209;channel U&#8209;Net &middot; Kosi Basin, Bihar</p>
+        <h1>The sorrow<br>of bihar,<br><em>mapped in radar</em></h1>
+        <p class="lede">
+          A U&#8209;Net trained on bi&#8209;temporal Sentinel&#8209;1 radar segments the
+          August&ndash;September 2024 Kosi flood pixel by pixel &mdash; through monsoon
+          cloud cover that grounds every optical satellite. <b>Upload a six&#8209;band SAR stack,
+          get a flood mask back.</b>
+        </p>
+        <div class="cta-row">
+          <a class="btn-primary" href="#demo">
+            Run it on your GeoTIFF
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M17 7H8M17 7V16"/></svg>
+          </a>
+          <a class="btn-secondary" href="#pipeline">See how it reads the river</a>
+        </div>
+
+        <div class="stat-strip">
+          <div class="stat"><div class="n">0.9593</div><div class="l">Test Dice</div></div>
+          <div class="stat"><div class="n">0.9218</div><div class="l">Test IoU</div></div>
+          <div class="stat"><div class="n">13.2%</div><div class="l">Flood pixels, study area</div></div>
+        </div>
+      </div>
+
+      <div class="chart-panel reveal">
+        <div class="chart-head">
+          <span>ROI &middot; 86.0&ndash;87.5&deg;E, 25.5&ndash;26.8&deg;N</span>
+          <span class="live">&#9679; log_ratio scan</span>
+        </div>
+        <div class="map-frame">
+          <div class="scanline"></div>
+          <svg viewBox="0 0 480 380" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="contour" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M0 40 Q20 20 40 40" fill="none" stroke="rgba(191,225,240,0.06)" stroke-width="1"/>
+              </pattern>
+              <linearGradient id="floodgrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#CE5B44" stop-opacity="0.55"/>
+                <stop offset="100%" stop-color="#CE5B44" stop-opacity="0.15"/>
+              </linearGradient>
+            </defs>
+            <rect x="0" y="0" width="480" height="380" fill="url(#contour)"/>
+            <!-- bounding rectangle -->
+            <rect x="24" y="20" width="432" height="340" fill="none" stroke="rgba(191,225,240,0.35)" stroke-width="1" stroke-dasharray="4 4"/>
+            <!-- braided river channel, schematic -->
+            <path d="M60 40 C 120 90, 90 140, 150 170 C 210 200, 170 240, 220 270 C 270 300, 230 330, 280 350"
+                  fill="none" stroke="#63D6EA" stroke-width="2.4" opacity="0.8"/>
+            <path d="M70 45 C 130 95, 100 150, 165 175 C 220 205, 185 245, 235 275"
+                  fill="none" stroke="#63D6EA" stroke-width="1.2" opacity="0.4"/>
+            <path d="M50 55 C 110 100, 80 145, 140 175"
+                  fill="none" stroke="#63D6EA" stroke-width="1.2" opacity="0.4"/>
+            <!-- flood polygons, staggered fade-in -->
+            <g>
+              <ellipse cx="150" cy="175" rx="46" ry="26" fill="url(#floodgrad)">
+                <animate attributeName="opacity" values="0;1;1" keyTimes="0;0.4;1" dur="4s" repeatCount="indefinite"/>
+              </ellipse>
+              <ellipse cx="225" cy="268" rx="38" ry="22" fill="url(#floodgrad)">
+                <animate attributeName="opacity" values="0;0;1;1" keyTimes="0;0.25;0.6;1" dur="4s" repeatCount="indefinite"/>
+              </ellipse>
+              <ellipse cx="278" cy="345" rx="30" ry="16" fill="url(#floodgrad)">
+                <animate attributeName="opacity" values="0;0;0;1;1" keyTimes="0;0.4;0.7;0.85;1" dur="4s" repeatCount="indefinite"/>
+              </ellipse>
+            </g>
+            <!-- corner coordinate ticks -->
+            <text x="30" y="16" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(191,225,240,0.45)">26.8&deg;N</text>
+            <text x="30" y="372" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(191,225,240,0.45)">25.5&deg;N</text>
+            <text x="392" y="372" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(191,225,240,0.45)">87.5&deg;E</text>
+          </svg>
+        </div>
+        <div class="map-caption">
+          <span>VV log&#8209;ratio, 1&ndash;20 Aug vs 1&ndash;20 Sep 2024</span>
+          <span style="color:#CE5B44;">&#9632; predicted flood extent</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ================= PIPELINE ================= -->
+  <section id="pipeline">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="section-num">01 &mdash; Input stack</p>
+        <h2>Six bands, one pass</h2>
+        <p class="section-sub">
+          The network never sees a photograph. It sees radar backscatter, before and after
+          the flood, plus terrain &mdash; six co&#8209;registered channels read together at
+          256&times;256 pixels per patch.
+        </p>
+      </div>
+
+      <div class="legend reveal">
+        <div class="legend-row">
+          <div class="idx">01</div>
+          <div class="band">VV_post</div>
+          <div class="desc"><b>Post&#8209;flood VV backscatter</b> &mdash; 1&ndash;20 Sep 2024 mean composite. Open water reflects radar away from the sensor, so flooded ground reads darker.</div>
+          <div class="tag">Sentinel&#8209;1</div>
+        </div>
+        <div class="legend-row">
+          <div class="idx">02</div>
+          <div class="band">VH_post</div>
+          <div class="desc"><b>Post&#8209;flood cross&#8209;pol backscatter</b> &mdash; catches double&#8209;bounce returns from flooded vegetation and structures that VV alone misses.</div>
+          <div class="tag">Sentinel&#8209;1</div>
+        </div>
+        <div class="legend-row">
+          <div class="idx">03</div>
+          <div class="band">VV_pre / VH_pre</div>
+          <div class="desc"><b>Pre&#8209;flood baseline</b> &mdash; 1&ndash;20 Aug 2024. Gives the network something dry to compare against.</div>
+          <div class="tag">Sentinel&#8209;1</div>
+        </div>
+        <div class="legend-row">
+          <div class="idx">04</div>
+          <div class="band">log_ratio</div>
+          <div class="desc"><b>Change&#8209;detection layer</b> &mdash; post minus pre, in decibels. Flooded pixels show a sharp negative excursion here.</div>
+          <div class="tag">Derived</div>
+        </div>
+        <div class="legend-row">
+          <div class="idx">05</div>
+          <div class="band">elevation</div>
+          <div class="desc"><b>SRTM terrain</b> &mdash; keeps the model from chasing radar shadow and layover in hill terrain at the basin's edge.</div>
+          <div class="tag">SRTM 30m</div>
+        </div>
+        <div class="legend-row model">
+          <div class="idx">&rarr;</div>
+          <div class="band">U&#8209;Net</div>
+          <div class="desc"><b>31.0M parameters</b>, trained under a combined cross&#8209;entropy and Dice loss, checkpoint saved at epoch 72 of 87.</div>
+          <div class="tag">Output: flood mask</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ================= PERFORMANCE ================= -->
+  <section id="performance">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="section-num">02 &mdash; Test set, 548 patches</p>
+        <h2>Where it lands</h2>
+        <p class="section-sub">
+          Measured against a held&#8209;out test partition, and against a label&#8209;informed
+          radar threshold &mdash; the strongest non&#8209;learned baseline the same data allows.
+        </p>
+      </div>
+
+      <div class="plate reveal">
+        <div class="metric">
+          <div class="v">0.9593</div>
+          <div class="k">Dice coefficient</div>
+        </div>
+        <div class="metric">
+          <div class="v">0.9218</div>
+          <div class="k">Intersection over union</div>
+        </div>
+        <div class="metric">
+          <div class="v">0.9591</div>
+          <div class="k">Precision</div>
+        </div>
+        <div class="metric">
+          <div class="v">0.9925</div>
+          <div class="k">Pixel accuracy</div>
+        </div>
+      </div>
+
+      <div style="margin-top:28px;" class="reveal">
+        <div class="plate-compare">
+          <span style="width:120px;">Threshold baseline</span>
+          <div class="bar-track"><div class="bar-fill" style="width:81.3%;"></div></div>
+          <span style="width:60px; text-align:right;">0.813</span>
+        </div>
+        <div class="plate-compare">
+          <span style="width:120px;">This U&#8209;Net</span>
+          <div class="bar-track"><div class="bar-fill unet" style="width:95.9%;"></div></div>
+          <span style="width:60px; text-align:right;">0.959</span>
+        </div>
+        <p style="font-family:var(--mono); font-size:11.5px; color:var(--muted-dim); margin-top:10px;">
+          Dice coefficient &middot; label&#8209;informed threshold at &minus;3.00&nbsp;dB vs. trained U&#8209;Net
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ================= LIVE DEMO ================= -->
+  <section id="demo">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="section-num">03 &mdash; Running it yourself</p>
+        <h2>Run it here</h2>
+        <p class="section-sub">
+          This upload goes straight to the trained model &mdash; the Hugging Face Space
+          is doing the inference, this page is just the console. Nothing is stored server&#8209;side
+          beyond the run itself.
+        </p>
+      </div>
+
+      <div class="howto" style="align-items:start;">
+        <div class="demo-panel reveal">
+          <input type="file" id="tif-input" accept=".tif,.tiff" hidden>
+          <div class="drop-zone" id="drop-zone">
+            <div class="dz-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12m0-12l-4 4m4-4l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+            </div>
+            <div class="dz-main">Drop 6&#8209;band GeoTIFF, or click to browse</div>
+            <div class="dz-sub" id="file-name">No file selected</div>
+          </div>
+
+          <div class="run-row">
+            <button class="btn-run" id="run-btn" disabled>Run inference</button>
+            <span class="demo-status" id="demo-status">Waiting for a file.</span>
+          </div>
+
+          <div class="result-panel" id="result-panel">
+            <div class="frame">
+              <img id="result-img" alt="Predicted flood mask" style="display:none;">
+              <div class="cap">Predicted flood mask</div>
+            </div>
+            <div class="result-summary">
+              <span class="label">Model summary</span>
+              <span id="result-summary">&mdash;</span>
+              <a class="btn-download" id="download-btn" href="#" download="predicted_flood_mask.png">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
+                Download result
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <ol class="reveal" style="margin-bottom:24px;">
+            <li><b>Assemble a six&#8209;band GeoTIFF</b> &mdash; VV_post, VH_post, VV_pre, VH_pre, log_ratio, elevation, in that order, co&#8209;registered at a common grid.</li>
+            <li><b>Drop it in</b> &mdash; anything larger than 256&times;256 is cropped; anything smaller is padded.</li>
+            <li><b>Read the mask</b> &mdash; a binary flood/no&#8209;flood image, plus a summary percentage of the patch covered.</li>
+          </ol>
+          <div class="disclaimer reveal">
+            <b>What this is, and isn't.</b> This is a research demonstrator trained and evaluated
+            on a single event over the Kosi basin. It is not an operational flood&#8209;warning
+            system, and hasn't been validated against independently surveyed ground truth.
+            Treat its output as a research signal, not a dispatch order.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div class="foot-left">
+      Satwik Shreshth<br>
+      <a href="mailto:satwikshreshth2002@gmail.com">satwikshreshth2002@gmail.com</a><br>
+      <a href="./Shreshth_Kosi_SAR_UNet_Flood_Mapping.pdf" target="_blank" rel="noopener">Read the paper (PDF)</a><br>
+      <a href="https://huggingface.co/spaces/satwikshreshth1/kosi-flood-sar-segmentation" target="_blank" rel="noopener">Inference backend on Hugging Face</a>
+    </div>
+    <div class="foot-right">
+      Sentinel&#8209;1 SAR &middot; JRC Global Surface Water &middot; SRTM 30m<br>
+      Kosi basin, Bihar &middot; August&ndash;September 2024
+    </div>
+  </div>
+</footer>
+
+<script type="module">
+  // The Hugging Face Space is the backend: this page calls its API directly
+  // via the Gradio JS client. No server of our own is involved.
+  const SPACE_ID = "satwikshreshth1/kosi-flood-sar-segmentation";
+  let clientPromise = null;
+
+  function getClient() {
+    if (!clientPromise) {
+      clientPromise = import("https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js")
+        .then(({ Client }) => Client.connect(SPACE_ID));
+    }
+    return clientPromise;
+  }
+
+  const fileInput   = document.getElementById('tif-input');
+  const dropZone    = document.getElementById('drop-zone');
+  const fileNameEl  = document.getElementById('file-name');
+  const runBtn      = document.getElementById('run-btn');
+  const statusEl    = document.getElementById('demo-status');
+  const resultPanel = document.getElementById('result-panel');
+  const resultImg   = document.getElementById('result-img');
+  const resultSummaryEl = document.getElementById('result-summary');
+  const downloadBtn = document.getElementById('download-btn');
+
+  let selectedFile = null;
+  let currentBlobUrl = null;
+
+  function setStatus(text, kind) {
+    statusEl.textContent = text;
+    statusEl.className = 'demo-status' + (kind ? ' ' + kind : '');
+  }
+
+  function pickFile(file) {
+    if (!file) return;
+    selectedFile = file;
+    fileNameEl.textContent = file.name;
+    runBtn.disabled = false;
+    setStatus('Ready to run.');
+    resultPanel.classList.remove('show');
+    downloadBtn.style.display = 'none';
+    if (currentBlobUrl) { URL.revokeObjectURL(currentBlobUrl); currentBlobUrl = null; }
+  }
+
+  dropZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', (e) => pickFile(e.target.files[0]));
+
+  ['dragover', 'dragleave', 'drop'].forEach(evt =>
+    dropZone.addEventListener(evt, (e) => e.preventDefault())
+  );
+  dropZone.addEventListener('dragover', () => dropZone.classList.add('drag'));
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+  dropZone.addEventListener('drop', (e) => {
+    dropZone.classList.remove('drag');
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) { fileInput.files = e.dataTransfer.files; pickFile(f); }
+  });
+
+  runBtn.addEventListener('click', async () => {
+    if (!selectedFile) return;
+    runBtn.disabled = true;
+    resultPanel.classList.remove('show');
+    setStatus('Connecting to inference backend…', 'busy');
+    try {
+      const client = await getClient();
+      setStatus('Running the U-Net over the patch…', 'busy');
+
+      let result;
+      try {
+        // Positional payload — matches the component order in app.py's gr.Interface.
+        result = await client.predict('/predict', [selectedFile]);
+      } catch (firstErr) {
+        console.warn('Positional payload failed, retrying with named payload:', firstErr);
+        // Fallback: some Gradio versions expect a named object keyed by the
+        // Python function's parameter name instead.
+        result = await client.predict('/predict', { tif_file: selectedFile });
+      }
+
+      const data = result && result.data ? result.data : [];
+      const maskOut = data[0];
+      const summaryOut = data[1];
+
+      let imgUrl = null;
+      if (maskOut) {
+        if (typeof maskOut === 'string') imgUrl = maskOut;
+        else if (maskOut.url) imgUrl = maskOut.url;
+        else if (maskOut.path) imgUrl = maskOut.path;
+      }
+
+      if (currentBlobUrl) { URL.revokeObjectURL(currentBlobUrl); currentBlobUrl = null; }
+
+      if (imgUrl) {
+        resultImg.src = imgUrl;
+        resultImg.style.display = 'block';
+
+        // Fetch the mask as a blob so the download attribute works reliably
+        // even when imgUrl points at a cross-origin Gradio file route.
+        try {
+          const resp = await fetch(imgUrl);
+          const blob = await resp.blob();
+          currentBlobUrl = URL.createObjectURL(blob);
+          const baseName = (selectedFile.name || 'input').replace(/\.[^/.]+$/, '');
+          downloadBtn.href = currentBlobUrl;
+          downloadBtn.download = baseName + '_flood_mask.png';
+          downloadBtn.style.display = 'inline-flex';
+        } catch (dlErr) {
+          console.warn('Could not prepare a downloadable copy, linking directly instead:', dlErr);
+          downloadBtn.href = imgUrl;
+          downloadBtn.download = 'predicted_flood_mask.png';
+          downloadBtn.style.display = 'inline-flex';
+        }
+      } else {
+        resultImg.style.display = 'none';
+        downloadBtn.style.display = 'none';
+      }
+      resultSummaryEl.textContent = summaryOut || 'No summary returned by the model.';
+      resultPanel.classList.add('show');
+      setStatus('Done.', 'ok');
+    } catch (err) {
+      console.error('Inference call failed:', err);
+      const detail = (err && (err.message || err.toString())) || 'unknown error';
+      setStatus('Inference failed — ' + detail + ' (see browser console for full detail)', 'err');
+    } finally {
+      runBtn.disabled = false;
+    }
+  });
+</script>
+
+<script>
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, {threshold:0.15});
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+
+</body>
+</html>

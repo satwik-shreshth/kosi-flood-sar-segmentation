@@ -1,0 +1,43 @@
+{
+  "model": "U-Net (6-channel input, features=[64,128,256,512])",
+  "total_parameters": 31045249,
+  "input_bands": [
+    "VV_post",
+    "VH_post",
+    "VV_pre",
+    "VH_pre",
+    "log_ratio",
+    "elevation"
+  ],
+  "loss_function": "BCE + Dice (0.5 weight each)",
+  "optimizer": "Adam, lr=1e-4, ReduceLROnPlateau",
+  "total_epochs_trained": 87,
+  "early_stopping_patience": 15,
+  "dataset": {
+    "total_patches": 3652,
+    "patch_size": 256,
+    "train_patches": 2638,
+    "val_patches": 466,
+    "test_patches": 548,
+    "mean_flood_fraction": 0.0919339486923965
+  },
+  "test_metrics": {
+    "loss": 0.03869758530037246,
+    "dice": 0.9592904239675425,
+    "iou": 0.921816562214037,
+    "precision": 0.959134115563859,
+    "recall": 0.9600303329915532,
+    "f1_score": 0.9595820150184948,
+    "specificity": 0.9958929450367144
+  },
+  "confusion_matrix": [
+    [
+      32502727,
+      134041
+    ],
+    [
+      130979,
+      3145981
+    ]
+  ]
+}

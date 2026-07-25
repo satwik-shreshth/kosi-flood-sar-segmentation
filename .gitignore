@@ -1,0 +1,46 @@
+# Files kept only in the Hugging Face Space deployment, not this repo
+app.py
+best_model.pt
+requirements.txt
+.gitattributes
+READMEhf.md
+
+# Jupyter
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.env
+
+# Model / checkpoint files (in case new ones land in this folder)
+*.pt
+*.pth
+*.onnx
+*.h5
+*.ckpt
+
+# Raw / intermediate data — regenerate via Data_Export.js rather than committing
+*.tif
+*.tiff
+*.npy
+*.zip
+*.tar.gz
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log

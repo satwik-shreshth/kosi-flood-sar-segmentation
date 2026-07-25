@@ -1,0 +1,2 @@
+Model,Dice,IoU,Precision,Recall,F1,Specificity
+U-Net (6-channel SAR),0.9593,0.9218,0.9591,0.9600,0.9596,0.9959

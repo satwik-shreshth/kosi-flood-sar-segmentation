@@ -1,0 +1,78 @@
+{
+  "tile_metadata": {
+    "tile_001": {
+      "width": "13568",
+      "height": "13568",
+      "band_count": "6",
+      "dtype": "float32",
+      "crs": "EPSG:4326",
+      "transform": "| 0.00, 0.00, 86.00|\n| 0.00,-0.00, 26.80|\n| 0.00, 0.00, 1.00|",
+      "nodata": "None",
+      "bounds": "BoundingBox(left=85.99994423059715, bottom=25.583210807968264, right=87.21877840809051, top=26.80204498546163)"
+    },
+    "tile_02": {
+      "width": "3131",
+      "height": "13568",
+      "band_count": "6",
+      "dtype": "float32",
+      "crs": "EPSG:4326",
+      "transform": "| 0.00, 0.00, 87.22|\n| 0.00,-0.00, 26.80|\n| 0.00, 0.00, 1.00|",
+      "nodata": "None",
+      "bounds": "BoundingBox(left=87.21877840809051, bottom=25.583210807968264, right=87.50004092354834, top=26.80204498546163)"
+    },
+    "tile_03": {
+      "width": "13568",
+      "height": "927",
+      "band_count": "6",
+      "dtype": "float32",
+      "crs": "EPSG:4326",
+      "transform": "| 0.00, 0.00, 86.00|\n| 0.00,-0.00, 25.58|\n| 0.00, 0.00, 1.00|",
+      "nodata": "None",
+      "bounds": "BoundingBox(left=85.99994423059715, bottom=25.499936981130386, right=87.21877840809051, top=25.583210807968264)"
+    },
+    "tile_04": {
+      "width": "3131",
+      "height": "927",
+      "band_count": "6",
+      "dtype": "float32",
+      "crs": "EPSG:4326",
+      "transform": "| 0.00, 0.00, 87.22|\n| 0.00,-0.00, 25.58|\n| 0.00, 0.00, 1.00|",
+      "nodata": "None",
+      "bounds": "BoundingBox(left=87.21877840809051, bottom=25.499936981130386, right=87.50004092354834, top=25.583210807968264)"
+    },
+    "label": {
+      "width": "16699",
+      "height": "14495",
+      "band_count": "1",
+      "dtype": "float32",
+      "crs": "EPSG:4326",
+      "transform": "| 0.00, 0.00, 86.00|\n| 0.00,-0.00, 26.80|\n| 0.00, 0.00, 1.00|",
+      "nodata": "None",
+      "bounds": "BoundingBox(left=85.99994423059715, bottom=25.499936981130386, right=87.50004092354834, top=26.80204498546163)"
+    }
+  },
+  "nodata_check": {
+    "tile_001_nan_pct": 1.94,
+    "tile_02_nan_pct": 5.96,
+    "tile_03_nan_pct": 1.71,
+    "tile_04_nan_pct": 0.76,
+    "label_nan_pct": 0.16
+  },
+  "class_balance": {
+    "flood_pixels": 31991717,
+    "valid_pixels": 241664048,
+    "flood_pct": 13.238095308243782
+  },
+  "bands": [
+    "VV_post",
+    "VH_post",
+    "VV_pre",
+    "VH_pre",
+    "log_ratio",
+    "elevation"
+  ],
+  "mosaic_dimensions": {
+    "width": 16699,
+    "height": 14495
+  }
+}
