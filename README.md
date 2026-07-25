@@ -11,7 +11,7 @@ labels and the baseline comparison.
 
 **[Try the live demo](https://huggingface.co/spaces/satwikshreshth1/kosi-flood-sar-segmentation)** — upload a six-band GeoTIFF and get a predicted flood mask back.
 
-**Links:** [Dataset (Kaggle)](https://www.kaggle.com/datasets/satwikshreshth01/bihar-kosi-flood-sar-datase) · [Live demo (Hugging Face Space)](https://huggingface.co/spaces/satwikshreshth1/kosi-flood-sar-segmentation)
+**Links:** [Project page](https://satwik-shreshth.github.io/kosi-flood-sar-segmentation/) · [Dataset (Kaggle)](https://www.kaggle.com/datasets/satwikshreshth01/bihar-kosi-flood-sar-datase) · [Live demo (Hugging Face Space)](https://huggingface.co/spaces/satwikshreshth1/kosi-flood-sar-segmentation)
 
 ---
 
