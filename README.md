@@ -9,9 +9,9 @@ a label-informed threshold baseline (Dice 0.8129). See the paper for the full me
 including an explicit discussion of the circularity between the threshold-derived reference
 labels and the baseline comparison.
 
-**[Try the live demo](https://huggingface.co/spaces/satwikshreshth1/kosi-flood-sar-segmentation)** — upload a six-band GeoTIFF and get a predicted flood mask back.
+**[Try the live demo](https://satwik-shreshth.github.io/kosi-flood-sar-segmentation/)** — upload a six-band GeoTIFF and get a predicted flood mask back.
 
-**Links:** [Project page](https://satwik-shreshth.github.io/kosi-flood-sar-segmentation/) · [Dataset (Kaggle)](https://www.kaggle.com/datasets/satwikshreshth01/bihar-kosi-flood-sar-datase) · [Live demo (Hugging Face Space)](https://huggingface.co/spaces/satwikshreshth1/kosi-flood-sar-segmentation)
+**Links:** [Project page](https://huggingface.co/spaces/satwikshreshth1/kosi-flood-sar-segmentation) · [Dataset (Kaggle)](https://www.kaggle.com/datasets/satwikshreshth01/bihar-kosi-flood-sar-datase) · [Live demo (Hugging Face Space)](https://huggingface.co/spaces/satwikshreshth1/kosi-flood-sar-segmentation)
 
 ---
 
